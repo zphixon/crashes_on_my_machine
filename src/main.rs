@@ -18,8 +18,11 @@ use winit::{
     event_loop::EventLoop,
     window::WindowBuilder,
 };
+use std::io::Write;
 
 fn main() {
+    print!("Press enter...");
+    std::io::stdout().flush().unwrap();
     std::io::stdin().read_line(&mut String::new()).unwrap();
     let required_extensions = vulkano_win::required_extensions();
     let instance = Instance::new(None, &required_extensions, vec![
