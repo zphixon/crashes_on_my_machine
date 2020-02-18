@@ -9,7 +9,13 @@ use vulkano::{
         DeviceExtensions,
     },
     instance::{
+        debug::{
+            MessageSeverity,
+            MessageType,
+            DebugCallback
+        },
         Instance,
+        InstanceExtensions,
         PhysicalDevice,
     },
 };
@@ -24,10 +30,49 @@ fn main() {
     print!("Press enter...");
     std::io::stdout().flush().unwrap();
     std::io::stdin().read_line(&mut String::new()).unwrap();
-    let required_extensions = vulkano_win::required_extensions();
-    let instance = Instance::new(None, &required_extensions, vec![
+
+    let extensions = InstanceExtensions {
+        ext_debug_utils: true,
+        ..vulkano_win::required_extensions()
+    };
+    let instance = Instance::new(None, &extensions, vec![
         "VK_LAYER_LUNARG_standard_validation"
     ]).expect("could not create instance");
+
+    let severity = MessageSeverity {
+        error: true,
+        warning: true,
+        information: true,
+        verbose: true,
+    };
+
+    let ty = MessageType::all();
+
+    let _debug_callback = DebugCallback::new(&instance, severity, ty, |msg| {
+        let severity = if msg.severity.error {
+            "error"
+        } else if msg.severity.warning {
+            "warning"
+        } else if msg.severity.information {
+            "information"
+        } else if msg.severity.verbose {
+            "verbose"
+        } else {
+            panic!("no-impl");
+        };
+
+        let ty = if msg.ty.general {
+            "general"
+        } else if msg.ty.validation {
+            "validation"
+        } else if msg.ty.performance {
+            "performance"
+        } else {
+            panic!("no-impl");
+        };
+
+        println!("{} {} {}: {}", msg.layer_prefix, ty, severity, msg.description);
+    }).ok();
 
     let physical = PhysicalDevice::enumerate(&instance).next().expect("couldn't find physical device");
     println!("Using physical device ({:?}): {}", physical.ty(), physical.name());
